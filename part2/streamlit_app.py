@@ -19,14 +19,6 @@ if tab == "📊 Local Sales":
 
     st.subheader("Monthly Sales by Category")
     df_monthly_sales = load_data("part2/outputs/monthly_sales_by_category")
-    st.write("🧪 Data sample:")
-    st.dataframe(df_monthly_sales.head())
-
-    st.write("📋 Columns:")
-    st.write(df_monthly_sales.columns)
-
-    st.write("🔢 Dtypes:")
-    st.write(df_monthly_sales.dtypes)
 
     st.altair_chart(
         alt.Chart(df_monthly_sales).mark_line().encode(
