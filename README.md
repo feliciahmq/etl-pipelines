@@ -78,23 +78,21 @@ Used Apache Spark (PySpark) to clean, transform, and aggregate large e-commerce 
 ## Part 3: Data Visualisation with Streamlit
 Visualize the aggregated data using Streamlit to explore insights across local sales, international performance, and pricing.
 
-### 🎯 Key Features:
+### Key Features:
 - Tabbed dashboard for:
   - Local sales (monthly trends, top SKUs, sales by fulfilments)
   - International sales (customer-wise revenue, top SKUs)
   - Pricing comparison (pricing across platforms, avg price per SKUs)
 
-### 📦 How It Works:
+### How It Works:
 - Loads processed Parquet outputs from Part 2.
 - Executes SQL queries via PySpark engine.
 - Converts results to Pandas for visualization (Altair, Plotly, Streamlit widgets).
 
 ### ▶️ To Run:
 ```bash
+cd part2
 streamlit run streamlit_app.py
-yaml
-Copy
-Edit
 ```
 
 ## will try kafka someday
