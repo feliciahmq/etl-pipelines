@@ -18,8 +18,8 @@ A basic ETL pipeline using **Pandas** to process ecommerce sales data and load i
 - 🔹 **Connect pgAdmin & Postgres**  
   pgAdmin to query Postgres db.
 
-- 🔹 **Dockerized Ingestion Script**  
-  The ingestion script is containerized and can be run with arguments to perform ingestion from CSV to PostgreSQL.
+- 🔹 **Ingestion Script**  
+  The ingestion script is can be run with arguments to perform ingestion from CSV to PostgreSQL.
 
 ### Set Up
 
@@ -114,7 +114,6 @@ Visualize the aggregated data using Streamlit to explore insights across local s
 ### ▶️ To Run:
 ```bash
 cd part2
-python pyspark.py
 streamlit run streamlit_app.py
 ```
 
