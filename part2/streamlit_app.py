@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 import plotly.express as px
+import os
 
 st.set_page_config(layout="wide")
 st.title("E-Commerce Sales Dashboard")
@@ -18,6 +19,12 @@ if tab == "📊 Local Sales":
 
     st.subheader("Monthly Sales by Category")
     df_monthly_sales = load_data("part2/outputs/monthly_sales_by_category")
+
+
+    st.write("Current directory:", os.getcwd())
+    st.write("Files in outputs/:", os.listdir("outputs"))
+    st.write("Files in monthly_sales_by_category/:", os.listdir("part2/outputs/monthly_sales_by_category"))
+
     st.write("File preview:")
     st.write(load_data("part2/outputs/monthly_sales_by_category").head())
     st.write("Columns:", df_monthly_sales.columns)
