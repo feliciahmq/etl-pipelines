@@ -18,6 +18,8 @@ if tab == "📊 Local Sales":
 
     st.subheader("Monthly Sales by Category")
     df_monthly_sales = load_data("part2/outputs/monthly_sales_by_category")
+    df_monthly_sales["Month"] = pd.to_datetime(df_monthly_sales["Month"], format="%Y-%m")
+
     st.altair_chart(
         alt.Chart(df_monthly_sales).mark_line().encode(
             x='Month:T',
