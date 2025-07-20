@@ -75,6 +75,29 @@ Used Apache Spark (PySpark) to clean, transform, and aggregate large e-commerce 
 - Create temporary views for SQL-based querying.
 - Write intermediate outputs to Parquet files for efficient access for streamlit dashboard.
 
+### ETL 
+
+| Step       | Description                                                                 |
+|------------|-----------------------------------------------------------------------------|
+| **Extract**   | Ingests raw CSVs such as `ecommerce_sales.csv`, `international_sales.csv` and `may-2022.csv`from local. |
+| **Transform** | Cleans and processes the data using PySpark: removes malformed entries, casts datatypes, filters nulls, and standardizes fields like `Date`, `Amount`, `SKU`, and `Category`. |
+| **Load**      | Writes transformed datasets and aggregated results to the `outputs/` folder in Parquet format. |
+
+### Data Modeling: Facts & Dimensions
+
+The ETL output follows a basic star schema design:
+
+- **Fact Tables:** e.g.
+  - `monthly_sales_by_category`: Monthly revenue by product style (category).
+  - `top_product_sku_by_amount`: Top-selling SKUs by total revenue.
+  - `monthly_sales_by_customer`: Gross sales grouped by international customers and month.
+  - `avg_price_per_sku`: Aggregated average pricing across platforms for each SKU.
+
+- **Dimension Tables:**
+  - `sales`: Cleaned local e-commerce sales data (Amazon).
+  - `international_sales`: Cleaned export/international order data.
+  - `pricing`: Cross-channel pricing info from `may-2022.csv`.
+
 ## Part 3: Data Visualisation with Streamlit
 Visualize the aggregated data using Streamlit to explore insights across local sales, international performance, and pricing.
 
@@ -86,12 +109,12 @@ Visualize the aggregated data using Streamlit to explore insights across local s
 
 ### How It Works:
 - Loads processed Parquet outputs from Part 2.
-- Executes SQL queries via PySpark engine.
-- Converts results to Pandas for visualization (Altair, Plotly, Streamlit widgets).
+- Converts results to Pandas dataframe for visualization.
 
 ### ▶️ To Run:
 ```bash
 cd part2
+python pyspark.py
 streamlit run streamlit_app.py
 ```
 
