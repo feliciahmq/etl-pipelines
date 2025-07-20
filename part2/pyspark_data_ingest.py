@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[2]:
 
 
-import part2.pyspark_data_ingest as pyspark_data_ingest
+import pyspark
 from pyspark.sql import SparkSession
 
 
-# In[2]:
+# In[3]:
 
 
 try:
@@ -23,13 +23,13 @@ spark = SparkSession.builder \
     .getOrCreate()
 
 
-# In[3]:
+# In[4]:
 
 
 df_sales_raw = spark.read.csv("../ecommerce_sales.csv", header=True)
 
 
-# In[8]:
+# In[5]:
 
 
 from pyspark.sql.functions import col, count, when
@@ -37,7 +37,7 @@ from pyspark.sql.functions import col, count, when
 df_sales_raw.select([count(when(col(c).isNull(), c)).alias(c) for c in df_sales_raw.columns]).show()
 
 
-# In[9]:
+# In[6]:
 
 
 from pyspark.sql.functions import col, to_date, when, regexp_replace, expr
@@ -57,37 +57,37 @@ df_sales = df_sales_raw.select(
 ).filter(col("Amount").isNotNull() & col("Qty").isNotNull())
 
 
-# In[10]:
+# In[7]:
 
 
 df_sales.printSchema()
 
 
-# In[11]:
+# In[8]:
 
 
 df_sales.show(5)
 
 
-# In[12]:
+# In[9]:
 
 
 df_sales.select([count(when(col(c).isNull(), c)).alias(c) for c in df_sales.columns]).show()
 
 
-# In[13]:
+# In[10]:
 
 
 df_international_raw = spark.read.csv("../international_sales.csv", header=True)
 
 
-# In[14]:
+# In[11]:
 
 
 df_international_raw.select([count(when(col(c).isNull(), c)).alias(c) for c in df_international_raw.columns]).show()
 
 
-# In[15]:
+# In[12]:
 
 
 df_cleaned_raw = df_international_raw.withColumn(
@@ -111,32 +111,32 @@ df_international = df_valid_dates.select(
 df_international = df_international.filter(col("Gross_Amount").isNotNull())
 
 
-# In[16]:
+# In[13]:
 
 
 df_international.printSchema()
 
 
-# In[17]:
+# In[14]:
 
 
 df_international.select([count(when(col(c).isNull(), c)).alias(c) for c in df_international.columns]).show()
 
 
-# In[18]:
+# In[15]:
 
 
 df_pricing_raw = spark.read.csv("../may-2022.csv", header=True)
 
 
-# In[20]:
+# In[16]:
 
 
 df_pricing_raw.select([count(when(col(c).isNull(), c)).alias(c) for c in df_pricing_raw.columns]).show()
 df_pricing_raw.printSchema()
 
 
-# In[21]:
+# In[17]:
 
 
 int_columns = [
@@ -159,13 +159,13 @@ df_pricing = df_pricing_raw.select(
 )
 
 
-# In[22]:
+# In[18]:
 
 
 df_pricing.printSchema()
 
 
-# In[29]:
+# In[19]:
 
 
 from pyspark.sql.functions import date_format
@@ -173,7 +173,7 @@ from pyspark.sql.functions import date_format
 df_sales = df_sales.withColumn("Month", date_format("Date", "yyyy-MM"))
 
 
-# In[30]:
+# In[20]:
 
 
 df_sales.createOrReplaceTempView("sales")
@@ -181,44 +181,58 @@ df_international.createOrReplaceTempView("international_sales")
 df_pricing.createOrReplaceTempView("pricing")
 
 
-# In[31]:
+# In[21]:
 
 
 print(df_sales.columns)
 
 
-# In[32]:
+# In[22]:
 
 
 print(df_international.columns)
 
 
-# In[33]:
+# In[23]:
 
 
 print(df_pricing.columns)
 
 
-# In[34]:
+# In[24]:
 
+
+spark.sql("""
+CREATE OR REPLACE TEMP VIEW top_categories AS
+SELECT Style AS Category
+FROM sales
+GROUP BY Style
+ORDER BY SUM(Amount) DESC
+LIMIT 5
+""")
 
 monthly_sales_by_category = spark.sql("""
-SELECT Month, Style AS Category, SUM(Amount) AS Revenue
+SELECT 
+  Month, 
+  Style AS Category, 
+  SUM(Amount) AS Revenue
 FROM sales
+WHERE Style IN (SELECT Category FROM top_categories)
+  AND Month IS NOT NULL
 GROUP BY Month, Style
-ORDER BY Month
+ORDER BY Month, Category
 """)
 # line chart
 
 
-# In[35]:
+# In[25]:
 
 
 monthly_sales_by_category.show(10, truncate=False)
 monthly_sales_by_category.write.mode("overwrite").parquet("outputs/monthly_sales_by_category")
 
 
-# In[37]:
+# In[29]:
 
 
 top_product_sku_by_amount = spark.sql("""
@@ -231,14 +245,14 @@ LIMIT 10
 # bar chart
 
 
-# In[38]:
+# In[30]:
 
 
 top_product_sku_by_amount.show(10, truncate=False)
 top_product_sku_by_amount.write.mode("overwrite").parquet("outputs/top_product_sku_by_amount")
 
 
-# In[39]:
+# In[31]:
 
 
 sales_by_fulfilment = spark.sql("""
@@ -249,14 +263,14 @@ GROUP BY Fulfilment
 # pie chart
 
 
-# In[40]:
+# In[32]:
 
 
 sales_by_fulfilment.show(10, truncate=False)
 sales_by_fulfilment.write.mode("overwrite").parquet("outputs/sales_by_fulfilment")
 
 
-# In[41]:
+# In[33]:
 
 
 monthly_sales_by_customer = spark.sql("""
@@ -264,38 +278,40 @@ SELECT Month, CUSTOMER, SUM(Gross_Amount) AS Revenue
 FROM international_sales
 GROUP BY Month, CUSTOMER
 ORDER BY Month
+LIMIT 10
 """)
 # line chart
 
 
-# In[42]:
+# In[34]:
 
 
 monthly_sales_by_customer.show(10, truncate=False)
 monthly_sales_by_customer.write.mode("overwrite").parquet("outputs/monthly_sales_by_customer")
 
 
-# In[43]:
+# In[40]:
 
 
 top_intl_product_sku_by_amount = spark.sql("""
-SELECT SKU, SUM(Gross_Amount) AS Gross
+SELECT SKU, SUM(Gross_Amount) AS Total_Gross_Amount
 FROM international_sales
+WHERE SKU != 'Unknown'
 GROUP BY SKU
-ORDER BY Gross DESC
+ORDER BY Total_Gross_Amount DESC
 LIMIT 10
 """)
 # bar chart
 
 
-# In[44]:
+# In[41]:
 
 
 top_intl_product_sku_by_amount.show(10, truncate=False)
 top_intl_product_sku_by_amount.write.mode("overwrite").parquet("outputs/top_intl_product_sku_by_amount")
 
 
-# In[45]:
+# In[42]:
 
 
 pricing_across_platforms = spark.sql("""
@@ -314,42 +330,48 @@ ORDER BY Sku DESC
 """)
 
 
-# In[46]:
+# In[43]:
 
 
 pricing_across_platforms.show(20, truncate=False)
 pricing_across_platforms.write.mode("overwrite").parquet("outputs/pricing_across_platforms")
 
 
-# In[47]:
+# In[44]:
 
 
 max_price_diff_across_platforms = spark.sql("""
 SELECT
-  Sku,
-  MAX(
-    GREATEST(
-      `Amazon MRP`, `Amazon FBA MRP`, `Myntra MRP`, `Ajio MRP`,
-      `Flipkart MRP`, `Snapdeal MRP`, `Paytm MRP`, `Limeroad MRP`
-    ) - LEAST(
-      `Amazon MRP`, `Amazon FBA MRP`, `Myntra MRP`, `Ajio MRP`,
-      `Flipkart MRP`, `Snapdeal MRP`, `Paytm MRP`, `Limeroad MRP`
-    )
+  SKU,
+  `Amazon MRP`,
+  `Amazon FBA MRP`,
+  `Myntra MRP`,
+  `Ajio MRP`,
+  `Flipkart MRP`,
+  `Snapdeal MRP`,
+  `Paytm MRP`,
+  `Limeroad MRP`,
+  GREATEST(
+    `Amazon MRP`, `Amazon FBA MRP`, `Myntra MRP`, `Ajio MRP`,
+    `Flipkart MRP`, `Snapdeal MRP`, `Paytm MRP`, `Limeroad MRP`
+  ) -
+  LEAST(
+    `Amazon MRP`, `Amazon FBA MRP`, `Myntra MRP`, `Ajio MRP`,
+    `Flipkart MRP`, `Snapdeal MRP`, `Paytm MRP`, `Limeroad MRP`
   ) AS Max_Channel_Diff
 FROM pricing
-GROUP BY Sku
 ORDER BY Max_Channel_Diff DESC
 """)
 
 
-# In[48]:
+# In[45]:
 
 
 max_price_diff_across_platforms.show(truncate=False)
 max_price_diff_across_platforms.write.mode("overwrite").parquet("outputs/max_price_diff_across_platforms")
 
 
-# In[49]:
+# In[113]:
 
 
 avg_price_per_sku = spark.sql("""
@@ -378,7 +400,7 @@ ORDER BY Sku
 """)
 
 
-# In[50]:
+# In[114]:
 
 
 avg_price_per_sku.show(truncate=False)

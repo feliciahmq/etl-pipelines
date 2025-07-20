@@ -17,9 +17,8 @@ def load_data(path):
 if tab == "📊 Local Sales":
     st.header("📊 Local Sales Overview")
 
-    st.subheader("Monthly Sales by Category")
+    st.subheader("Monthly Sales by Top 5 Category")
     df_monthly_sales = load_data("part2/outputs/monthly_sales_by_category")
-
     st.altair_chart(
         alt.Chart(df_monthly_sales).mark_line().encode(
             x='Month:T',
@@ -30,7 +29,7 @@ if tab == "📊 Local Sales":
         use_container_width=True
     )
 
-    st.subheader("Top SKUs by Amount")
+    st.subheader("Top 10 SKUs by Amount")
     df_top_sku = load_data("part2/outputs/top_product_sku_by_amount")
     st.dataframe(df_top_sku)
 
@@ -42,26 +41,34 @@ if tab == "📊 Local Sales":
 elif tab == "🌍 International Sales":
     st.header("🌍 International Sales Overview")
 
-    st.subheader("Monthly Sales by Customer")
+    st.subheader("Monthly Sales by Top 10 Customer")
     df_int_monthly = load_data("part2/outputs/monthly_sales_by_customer")
     customer_total = df_int_monthly.groupby("CUSTOMER")["Revenue"].sum().reset_index()
     st.bar_chart(customer_total.set_index("CUSTOMER"))
 
-    st.subheader("Top International SKUs by Gross Amount")
+    st.subheader("Top 10 International SKUs by Gross Amount")
     df_top_intl = load_data("part2/outputs/top_intl_product_sku_by_amount")
     st.dataframe(df_top_intl)
 
 elif tab == "🛒 Pricing":
-    st.header("🛒 Price Comparison Across Channels")
+    st.header("🛒 Price Comparison Across Platforms")
 
     st.subheader("Pricing Across Platforms")
     df_price = load_data("part2/outputs/pricing_across_platforms")
+    
+    sku_query = st.text_input("Search by SKU (case sensitive)")
+    if sku_query:
+        df_price = df_price[df_price["Sku"].str.contains(sku_query, case=False, na=False)]
+
     st.dataframe(df_price)
 
-    st.subheader("Max Price Difference Per SKU")
+    st.subheader("Max Price Difference Across Platforms")
     df_diff = load_data("part2/outputs/max_price_diff_across_platforms")
-    st.dataframe(df_diff)
+    selected_columns = ["SKU", "Max_Channel_Diff", "Max_Platform", "Min_Platform"]
+    sku_query = st.text_input("Search by SKU (case insensitive)")
+    if sku_query:
+        df_filtered = df_diff[df_diff["SKU"].str.contains(sku_query, case=False, na=False)]
+    else:
+        df_filtered = df_diff
 
-    st.subheader("Average Price Per SKU")
-    df_avg = load_data("part2/outputs/avg_price_per_sku")
-    st.dataframe(df_avg)
+    st.dataframe(df_filtered[selected_columns])
