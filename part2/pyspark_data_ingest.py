@@ -165,15 +165,14 @@ df_pricing = df_pricing_raw.select(
 df_pricing.printSchema()
 
 
-# In[19]:
+# In[55]:
 
 
 from pyspark.sql.functions import date_format
-
 df_sales = df_sales.withColumn("Month", date_format("Date", "yyyy-MM"))
 
 
-# In[20]:
+# In[56]:
 
 
 df_sales.createOrReplaceTempView("sales")
@@ -181,25 +180,31 @@ df_international.createOrReplaceTempView("international_sales")
 df_pricing.createOrReplaceTempView("pricing")
 
 
-# In[21]:
+# In[57]:
 
 
 print(df_sales.columns)
 
 
-# In[22]:
+# In[63]:
+
+
+df_sales.printSchema()
+
+
+# In[64]:
 
 
 print(df_international.columns)
 
 
-# In[23]:
+# In[65]:
 
 
 print(df_pricing.columns)
 
 
-# In[24]:
+# In[66]:
 
 
 spark.sql("""
@@ -223,16 +228,23 @@ GROUP BY Month, Style
 ORDER BY Month, Category
 """)
 # line chart
+monthly_sales_by_category = monthly_sales_by_category.withColumn("Month", to_date("Month", "yyyy-MM"))
 
 
-# In[25]:
+# In[67]:
+
+
+monthly_sales_by_category.printSchema()
+
+
+# In[68]:
 
 
 monthly_sales_by_category.show(10, truncate=False)
 monthly_sales_by_category.write.mode("overwrite").parquet("outputs/monthly_sales_by_category")
 
 
-# In[29]:
+# In[69]:
 
 
 top_product_sku_by_amount = spark.sql("""
@@ -245,14 +257,14 @@ LIMIT 10
 # bar chart
 
 
-# In[30]:
+# In[70]:
 
 
 top_product_sku_by_amount.show(10, truncate=False)
 top_product_sku_by_amount.write.mode("overwrite").parquet("outputs/top_product_sku_by_amount")
 
 
-# In[31]:
+# In[71]:
 
 
 sales_by_fulfilment = spark.sql("""
@@ -263,14 +275,14 @@ GROUP BY Fulfilment
 # pie chart
 
 
-# In[32]:
+# In[72]:
 
 
 sales_by_fulfilment.show(10, truncate=False)
 sales_by_fulfilment.write.mode("overwrite").parquet("outputs/sales_by_fulfilment")
 
 
-# In[33]:
+# In[73]:
 
 
 monthly_sales_by_customer = spark.sql("""
@@ -283,14 +295,14 @@ LIMIT 10
 # line chart
 
 
-# In[34]:
+# In[74]:
 
 
 monthly_sales_by_customer.show(10, truncate=False)
 monthly_sales_by_customer.write.mode("overwrite").parquet("outputs/monthly_sales_by_customer")
 
 
-# In[40]:
+# In[75]:
 
 
 top_intl_product_sku_by_amount = spark.sql("""
@@ -304,14 +316,14 @@ LIMIT 10
 # bar chart
 
 
-# In[41]:
+# In[76]:
 
 
 top_intl_product_sku_by_amount.show(10, truncate=False)
 top_intl_product_sku_by_amount.write.mode("overwrite").parquet("outputs/top_intl_product_sku_by_amount")
 
 
-# In[42]:
+# In[77]:
 
 
 pricing_across_platforms = spark.sql("""
@@ -330,14 +342,14 @@ ORDER BY Sku DESC
 """)
 
 
-# In[43]:
+# In[78]:
 
 
 pricing_across_platforms.show(20, truncate=False)
 pricing_across_platforms.write.mode("overwrite").parquet("outputs/pricing_across_platforms")
 
 
-# In[44]:
+# In[80]:
 
 
 max_price_diff_across_platforms = spark.sql("""
@@ -351,6 +363,7 @@ SELECT
   `Snapdeal MRP`,
   `Paytm MRP`,
   `Limeroad MRP`,
+  
   GREATEST(
     `Amazon MRP`, `Amazon FBA MRP`, `Myntra MRP`, `Ajio MRP`,
     `Flipkart MRP`, `Snapdeal MRP`, `Paytm MRP`, `Limeroad MRP`
@@ -358,59 +371,46 @@ SELECT
   LEAST(
     `Amazon MRP`, `Amazon FBA MRP`, `Myntra MRP`, `Ajio MRP`,
     `Flipkart MRP`, `Snapdeal MRP`, `Paytm MRP`, `Limeroad MRP`
-  ) AS Max_Channel_Diff
+  ) AS Max_Channel_Diff,
+
+  CASE GREATEST(
+    `Amazon MRP`, `Amazon FBA MRP`, `Myntra MRP`, `Ajio MRP`,
+    `Flipkart MRP`, `Snapdeal MRP`, `Paytm MRP`, `Limeroad MRP`
+  )
+    WHEN `Amazon MRP` THEN 'Amazon MRP'
+    WHEN `Amazon FBA MRP` THEN 'Amazon FBA MRP'
+    WHEN `Myntra MRP` THEN 'Myntra MRP'
+    WHEN `Ajio MRP` THEN 'Ajio MRP'
+    WHEN `Flipkart MRP` THEN 'Flipkart MRP'
+    WHEN `Snapdeal MRP` THEN 'Snapdeal MRP'
+    WHEN `Paytm MRP` THEN 'Paytm MRP'
+    WHEN `Limeroad MRP` THEN 'Limeroad MRP'
+  END AS Max_Platform,
+
+  CASE LEAST(
+    `Amazon MRP`, `Amazon FBA MRP`, `Myntra MRP`, `Ajio MRP`,
+    `Flipkart MRP`, `Snapdeal MRP`, `Paytm MRP`, `Limeroad MRP`
+  )
+    WHEN `Amazon MRP` THEN 'Amazon MRP'
+    WHEN `Amazon FBA MRP` THEN 'Amazon FBA MRP'
+    WHEN `Myntra MRP` THEN 'Myntra MRP'
+    WHEN `Ajio MRP` THEN 'Ajio MRP'
+    WHEN `Flipkart MRP` THEN 'Flipkart MRP'
+    WHEN `Snapdeal MRP` THEN 'Snapdeal MRP'
+    WHEN `Paytm MRP` THEN 'Paytm MRP'
+    WHEN `Limeroad MRP` THEN 'Limeroad MRP'
+  END AS Min_Platform
+
 FROM pricing
 ORDER BY Max_Channel_Diff DESC
 """)
 
 
-# In[45]:
+# In[82]:
 
 
 max_price_diff_across_platforms.show(truncate=False)
 max_price_diff_across_platforms.write.mode("overwrite").parquet("outputs/max_price_diff_across_platforms")
-
-
-# In[113]:
-
-
-avg_price_per_sku = spark.sql("""
-SELECT
-  Sku,
-  AVG(`Amazon MRP`) AS Avg_Amazon,
-  AVG(`Amazon FBA MRP`) AS Avg_FBA,
-  AVG(`Myntra MRP`) AS Avg_Myntra,
-  AVG(`Ajio MRP`) AS Avg_Ajio,
-  AVG(`Flipkart MRP`) AS Avg_Flipkart,
-  AVG(`Snapdeal MRP`) AS Avg_Snapdeal,
-  AVG(`Paytm MRP`) AS Avg_Paytm,
-  AVG(`Limeroad MRP`) AS Avg_Limeroad
-FROM pricing
-GROUP BY Sku
-HAVING
-  AVG(`Amazon MRP`) IS NOT NULL OR
-  AVG(`Amazon FBA MRP`) IS NOT NULL OR
-  AVG(`Myntra MRP`) IS NOT NULL OR
-  AVG(`Ajio MRP`) IS NOT NULL OR
-  AVG(`Flipkart MRP`) IS NOT NULL OR
-  AVG(`Snapdeal MRP`) IS NOT NULL OR
-  AVG(`Paytm MRP`) IS NOT NULL OR
-  AVG(`Limeroad MRP`) IS NOT NULL
-ORDER BY Sku
-""")
-
-
-# In[114]:
-
-
-avg_price_per_sku.show(truncate=False)
-avg_price_per_sku.write.mode("overwrite").parquet("outputs/avg_price_per_sku")
-
-
-# In[ ]:
-
-
-
 
 
 # In[ ]:
