@@ -4,7 +4,7 @@
 # In[1]:
 
 
-import pyspark
+import part2.pyspark_data_ingest as pyspark_data_ingest
 from pyspark.sql import SparkSession
 
 
