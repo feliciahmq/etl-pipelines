@@ -19,17 +19,6 @@ if tab == "📊 Local Sales":
 
     st.subheader("Monthly Sales by Category")
     df_monthly_sales = load_data("part2/outputs/monthly_sales_by_category")
-
-
-    st.write("Current directory:", os.getcwd())
-    st.write("Files in outputs/:", os.listdir("outputs"))
-    st.write("Files in monthly_sales_by_category/:", os.listdir("part2/outputs/monthly_sales_by_category"))
-
-    st.write("File preview:")
-    st.write(load_data("part2/outputs/monthly_sales_by_category").head())
-    st.write("Columns:", df_monthly_sales.columns)
-    df_monthly_sales["Month"] = pd.to_datetime(df_monthly_sales["Month"], format="%Y-%m")
-
     st.altair_chart(
         alt.Chart(df_monthly_sales).mark_line().encode(
             x='Month:T',

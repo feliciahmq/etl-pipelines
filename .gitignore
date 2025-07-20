@@ -9,4 +9,3 @@ ecommerce_sales_postgres_data/
 **/.ipynb_checkpoints/
 
 artifacts/
-*.parquet
