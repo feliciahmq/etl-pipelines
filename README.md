@@ -2,6 +2,8 @@
 
 My self-learning journey into **Data Engineering**, where I explore different tools and techniques to build an end-to-end ETL pipeline.
 
+dataset from [here](https://www.kaggle.com/datasets/thedevastator/unlock-profits-with-e-commerce-sales-data?resource=download)
+
 ## Part 1: ETL with Pandas & Docker
 A basic ETL pipeline using **Pandas** to process ecommerce sales data and load it into a **PostgreSQL** database. This is containerized using **Docker**, and **pgAdmin** is included for database inspection.
 
@@ -64,7 +66,36 @@ docker run -v $(pwd)/ecommerce_sales.csv:/app/ecommerce_sales.csv \
 ```
 
 ## Part 2: with pySpark for Batch Processing
+Used Apache Spark (PySpark) to clean, transform, and aggregate large e-commerce datasets for analysis and dashboarding.
 
-## Part 3: with Kafka for Streaming
+### Steps:
+- Load and clean multiple CSV files (e.g., sales, pricing, international).
+- Normalize datatypes, handle nulls and malformed values.
+- Extract time-based columns (e.g., Month from Date).
+- Create temporary views for SQL-based querying.
+- Write intermediate outputs to Parquet files for efficient access for streamlit dashboard.
 
-## Part 4: Data Visualisation with Streamlit
+## Part 3: Data Visualisation with Streamlit
+Visualize the aggregated data using Streamlit to explore insights across local sales, international performance, and pricing.
+
+### 🎯 Key Features:
+- Tabbed dashboard for:
+  - Local sales (monthly trends, top SKUs, sales by fulfilments)
+  - International sales (customer-wise revenue, top SKUs)
+  - Pricing comparison (pricing across platforms, avg price per SKUs)
+
+### 📦 How It Works:
+- Loads processed Parquet outputs from Part 2.
+- Executes SQL queries via PySpark engine.
+- Converts results to Pandas for visualization (Altair, Plotly, Streamlit widgets).
+
+### ▶️ To Run:
+```bash
+streamlit run streamlit_app.py
+yaml
+Copy
+Edit
+```
+
+## will try kafka someday
+generated readme with chatgpt :D

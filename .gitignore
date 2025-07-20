@@ -1,0 +1,12 @@
+ecommerce_sales_postgres_data/
+
+__pycache__/
+*.pyc
+.env
+*.DS_Store
+
+**/.ipynb_checkpoints/
+
+outputs/
+artifacts/
+*.parquet
